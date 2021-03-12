@@ -1,4 +1,4 @@
-import { Component, Fragment } from "react";
+import { useEffect, useState } from "react";
 import Leaflet from "../../shared/services/leaflet.service";
 import { ToolsEnum } from "../../shared/tools";
 import MapTools from "../MapTools/MapTools";
@@ -8,29 +8,32 @@ interface LeafletMapState {
   currentTool: ToolsEnum;
 }
 
-export default class LeafletMap extends Component<{}, LeafletMapState> {
-  constructor(props: any) {
-    super(props);
-    this.state = { currentTool: ToolsEnum.Movement };
-    this.setTool = this.setTool.bind(this);
+export default function LeafletMap() {
+  /**
+   * Sets the current tool.
+   *
+   * @param tool The new tool to set as current.
+   */
+  function setTool(tool: ToolsEnum) {
+    setState({ currentTool: tool });
   }
 
-  componentDidMount() {
+  // Initialize the local state of the component.
+  const [state, setState] = useState<LeafletMapState>({
+    currentTool: ToolsEnum.Movement
+  });
+
+  // Listen for keyboard when component is mounted.
+  useEffect(() => {
     Leaflet.createLeafletMap("leaflet__map");
-  }
+  }, []);
 
-  setTool(tool: ToolsEnum) {
-    this.setState({ currentTool: tool });
-  }
-
-  render() {
-    return (
-      <Fragment>
-        <MapTools
-          currentTool={this.state.currentTool}
-          onSetTool={this.setTool} />
-        <div id="leaflet__map"></div>
-      </Fragment>
-    );
-  }
+  return (
+    <div className={`leaflet__container tool--${state.currentTool}`}>
+      <MapTools
+        currentTool={state.currentTool}
+        onSetTool={setTool} />
+      <div id="leaflet__map"></div>
+    </div>
+  );
 }

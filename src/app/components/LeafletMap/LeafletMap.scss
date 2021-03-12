@@ -6,7 +6,11 @@
   bottom: 0;
   z-index: 1;
 
-  &.tool--path { cursor: crosshair; }
-  &.tool--marker { cursor: pointer; }
-  &.tool--bin { cursor: default; }
+}
+
+.leaflet__container {
+  &.tool--movement * { cursor: grab; }
+  &.tool--path * { cursor: crosshair; }
+  &.tool--marker * { cursor: pointer; }
+  &.tool--bin * { cursor: default; }
 }
