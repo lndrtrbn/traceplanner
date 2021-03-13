@@ -1,4 +1,4 @@
-import { Fragment, KeyboardEvent, useState } from "react";
+import { Fragment, KeyboardEvent, useEffect, useRef, useState } from "react";
 import "./TopInput.scss";
 
 interface TopInputProps {
@@ -7,9 +7,12 @@ interface TopInputProps {
 }
 
 export default function TopInput({ value, onSubmit }: TopInputProps) {
-  const placeholder = "Marker content";
+  const inputRef = useRef<HTMLInputElement>(null);
   // Initialize the local state of the component.
   const [state, setState] = useState(value);
+
+  // Focus the input field when component mounted.
+  useEffect(() => inputRef.current?.focus(), []);
 
   /**
    * Submits value if the key is "Enter".
@@ -44,8 +47,9 @@ export default function TopInput({ value, onSubmit }: TopInputProps) {
       </div>
       <div className="top__input">
         <input
+          ref={inputRef}
           type="text"
-          placeholder={placeholder}
+          placeholder="Marker content"
           value={state}
           onChange={(e) => setState(e.target.value)}
           onKeyPress={handleKeyPress} />
