@@ -1,0 +1,30 @@
+.top__input {
+  position: absolute;
+  top: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 3;
+  display: flex;
+  box-shadow: 0px 0px 0px 4px var(--black02);
+  border-radius: 2px;
+  overflow: hidden;
+
+  input {
+    outline: none;
+    border: 0;
+    width: 500px;
+    padding: 15px 30px;
+  }
+
+  button {
+    outline: none;
+    border: 0;
+    width: 50px;
+    cursor: pointer;
+    color: var(--black05);
+    background-color: var(--green);
+    opacity: 0.8;
+
+    &:hover { opacity: 1; }
+  }
+}

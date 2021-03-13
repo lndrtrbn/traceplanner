@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import Leaflet from "../../shared/services/leaflet.service";
 import { ToolsEnum } from "../../shared/tools";
 import MapTools from "../MapTools/MapTools";
+import TopInput from "../TopInput/TopInput";
 import "./LeafletMap.scss";
 
 interface LeafletMapState {
@@ -29,11 +30,16 @@ export default function LeafletMap() {
   }, []);
 
   return (
-    <div className={`leaflet__container tool--${state.currentTool}`}>
+    <Fragment>
+      <TopInput
+        value="ccsv"
+        onSubmit={(b) => console.log(b)} />
       <MapTools
         currentTool={state.currentTool}
         onSetTool={setTool} />
-      <div id="leaflet__map"></div>
-    </div>
+      <div className={`leaflet__container tool--${state.currentTool}`}>
+        <div id="leaflet__map"></div>
+      </div>
+    </Fragment>
   );
 }
