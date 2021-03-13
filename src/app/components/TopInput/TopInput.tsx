@@ -1,4 +1,4 @@
-import { KeyboardEvent, useState } from "react";
+import { Fragment, KeyboardEvent, useState } from "react";
 import "./TopInput.scss";
 
 interface TopInputProps {
@@ -30,17 +30,29 @@ export default function TopInput({ value, onSubmit }: TopInputProps) {
     setState("");
   }
 
+  /**
+   * Cancels editing content.
+   */
+  function cancel() {
+    onSubmit("");
+    setState("");
+  }
+
   return (
-    <div className="top__input">
-      <input
-        type="text"
-        placeholder={placeholder}
-        value={state}
-        onChange={(e) => setState(e.target.value)}
-        onKeyPress={handleKeyPress} />
-      <button onClick={handleSubmit}>
-        <i className="fas fa-check"></i>
-      </button>
-    </div>
+    <Fragment>
+      <div className="top__input__overlay" onClick={cancel}>
+      </div>
+      <div className="top__input">
+        <input
+          type="text"
+          placeholder={placeholder}
+          value={state}
+          onChange={(e) => setState(e.target.value)}
+          onKeyPress={handleKeyPress} />
+        <button onClick={handleSubmit}>
+          <i className="fas fa-check"></i>
+        </button>
+      </div>
+    </Fragment>
   );
 }

@@ -20,6 +20,12 @@ export default class LeafletService {
     L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(this.map);
   }
 
+  /**
+   * Adds a new marker on the map.
+   *
+   * @param where Position of the marker.
+   * @returns The created marker.
+   */
   addMarker(where: L.LatLng): L.Marker {
     const icon = L.icon({
       iconUrl: 'marker.svg',
@@ -31,10 +37,21 @@ export default class LeafletService {
     return marker;
   }
 
+  /**
+   * Sets the content of a marker.
+   *
+   * @param marker The marker to edit.
+   * @param content The content to set.
+   */
   editMarker(marker: L.Marker, content: string) {
-    marker.bindPopup(content);
+    content ? marker.bindPopup(content) : marker.unbindPopup();
   }
 
+  /**
+   * Removes an element from the map.
+   *
+   * @param element The element to remove.
+   */
   removeElement<T extends L.Layer>(element: T): void {
     this.map.removeLayer(element);
   }

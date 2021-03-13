@@ -1,5 +1,5 @@
 import { Component, Fragment, useEffect, useRef, useState } from "react";
-import { LeafletMouseEvent } from "leaflet";
+import { LeafletMouseEvent, Marker } from "leaflet";
 import { ToolsEnum } from "../../shared/tools";
 import MapTools from "../MapTools/MapTools";
 import TopInput from "../TopInput/TopInput";
@@ -8,18 +8,26 @@ import "./LeafletMap.scss";
 
 interface LeafletMapState {
   tool: ToolsEnum;
+  writing: boolean;
+  inputContent: string;
 }
 
 export default class LeafletMap extends Component<{}, LeafletMapState> {
   leaflet: LeafletService|null = null;
+  activeMarker: Marker|null = null;
 
   constructor(props = {}) {
     super(props);
-    this.state = { tool: ToolsEnum.Movement };
+    this.state = {
+      tool: ToolsEnum.Movement,
+      writing: false,
+      inputContent: ""
+    };
     // Bindings.
     this.onMapClick = this.onMapClick.bind(this);
     this.onMarkerClick = this.onMarkerClick.bind(this);
     this.handleSetTool = this.handleSetTool.bind(this);
+    this.setMarkerContent = this.setMarkerContent.bind(this);
   }
 
   componentDidMount() {
@@ -28,28 +36,51 @@ export default class LeafletMap extends Component<{}, LeafletMapState> {
   }
 
   onMapClick(event: LeafletMouseEvent) {
-    if (this.state.tool === ToolsEnum.Marker) {
-      const marker = this.leaflet?.addMarker(event.latlng);
-      marker?.on("click", this.onMarkerClick);
+    if (this.leaflet) {
+      if (this.state.tool === ToolsEnum.Marker) {
+        const marker = this.leaflet.addMarker(event.latlng);
+        marker.on("click", this.onMarkerClick);
+        this.setState({ writing: true });
+        this.activeMarker = marker;
+      }
     }
   }
 
   onMarkerClick(event: LeafletMouseEvent) {
+    const target: Marker = event.target;
     if (this.state.tool === ToolsEnum.Bin) {
-      this.leaflet?.removeElement(event.target);
+      this.leaflet?.removeElement(target);
+    } else if (this.state.tool === ToolsEnum.Editor) {
+      this.setState({
+        writing: true,
+        inputContent: target.getPopup()?.getContent()?.toString() || ""
+      });
+      this.activeMarker = target;
     }
   }
 
+  setMarkerContent(content: string) {
+    if (this.activeMarker) {
+      this.leaflet?.editMarker(this.activeMarker, content);
+    }
+    this.setState({ writing: false, inputContent: "" });
+    this.activeMarker = null;
+  }
+
   handleSetTool (tool: ToolsEnum) {
-    this.setState({ tool })
+    if (!this.state.writing) {
+      this.setState({ tool });
+    }
   }
 
   render() {
     return (
       <Fragment>
-        <TopInput
-          value="ccsv"
-          onSubmit={(b) => console.log(b)} />
+        {this.state.writing && 
+          <TopInput
+            value={this.state.inputContent}
+            onSubmit={this.setMarkerContent} />
+        }
         <MapTools
           currentTool={this.state.tool}
           onSetTool={this.handleSetTool} />
