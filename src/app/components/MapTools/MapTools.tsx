@@ -10,17 +10,21 @@ interface MapToolsProps {
 export default function MapTools({ currentTool, onSetTool }: MapToolsProps) {  
   // Listen for keyboard when component is mounted.
   useEffect(() => {
-    const toolsMap: Map<string, ToolsEnum> = new Map()
-      .set("KeyD", ToolsEnum.Movement).set("KeyP", ToolsEnum.Path)
-      .set("Semicolon", ToolsEnum.Marker).set("KeyE", ToolsEnum.Editor)
-      .set("KeyR", ToolsEnum.Bin);
-    document.addEventListener("keypress", (event) => {
+    function listenForShortcuts(event: KeyboardEvent) {
+      const toolsMap: Map<string, ToolsEnum> = new Map()
+        .set("KeyD", ToolsEnum.Movement)
+        .set("KeyP", ToolsEnum.Path)
+        .set("Semicolon", ToolsEnum.Marker)
+        .set("KeyE", ToolsEnum.Editor)
+        .set("KeyR", ToolsEnum.Bin);
       const tool = toolsMap.get(event.code);
       if (tool) {
         onSetTool(tool);
       }
-    });
-  }, []);
+    }
+    document.addEventListener("keypress", listenForShortcuts);
+    return () => document.removeEventListener("keypress", listenForShortcuts);
+  }, [onSetTool]);
 
   return (
     <div className="map__tools">

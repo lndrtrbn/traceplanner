@@ -9,8 +9,17 @@
 }
 
 .leaflet__container {
-  &.tool--movement * { cursor: grab; }
-  &.tool--path * { cursor: crosshair; }
-  &.tool--marker * { cursor: pointer; }
-  &.tool--bin * { cursor: default; }
+  &.tool--movement > * { cursor: grab; }
+  &.tool--path > * { cursor: crosshair; }
+  &.tool--marker > * { cursor: pointer; }
+  &.tool--editor > * { cursor: default; }
+  &.tool--bin > * { cursor: default; }
+}
+
+.log {
+  position: absolute;
+  top: 80px;
+  left: 80px;
+  background-color: #fff;
+  z-index: 999;
 }

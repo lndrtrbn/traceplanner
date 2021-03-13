@@ -7,26 +7,35 @@ const MAP_CONFIG = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | TracePlanner by <a href="https://github.com/lndrtrbn">Landry Trebon</a>'
 }
 
-// const MARKER_ICON = L.icon({
-//   iconUrl: 'marker.svg',
-//   iconSize:     [22, 30],
-//   iconAnchor:   [11, 30],
-//   popupAnchor:  [0, -20]
-// });
+export default class LeafletService {
+  map: L.Map;
 
-class LeafletService {
   /**
    * Creates a new leaflet map attached to a DOM Element.
    *
    * @param domID The ID of the DOM element to attach the leaflet map.
-   * @returns The newly created leaflet map.
    */
-  createLeafletMap(domID: string): L.Map {
-    const map = L.map(domID).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
-    L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(map);
-    return map;
+  constructor(domID: string) {
+    this.map = L.map(domID).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+    L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(this.map);
+  }
+
+  addMarker(where: L.LatLng): L.Marker {
+    const icon = L.icon({
+      iconUrl: 'marker.svg',
+      iconSize:     [22, 30],
+      iconAnchor:   [11, 30],
+      popupAnchor:  [0, -20]
+    });
+    const marker = L.marker(where, { icon }).addTo(this.map);
+    return marker;
+  }
+
+  editMarker(marker: L.Marker, content: string) {
+    marker.bindPopup(content);
+  }
+
+  removeElement<T extends L.Layer>(element: T): void {
+    this.map.removeLayer(element);
   }
 }
-
-const Leaflet = new LeafletService();
-export default Leaflet;
