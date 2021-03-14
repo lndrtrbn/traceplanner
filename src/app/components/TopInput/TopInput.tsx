@@ -3,10 +3,11 @@ import "./TopInput.scss";
 
 interface TopInputProps {
   value: string;
-  onSubmit: (value: string) => void
+  onSubmit: (value: string) => void,
+  onCancel: () => void
 }
 
-export default function TopInput({ value, onSubmit }: TopInputProps) {
+export default function TopInput({ value, onSubmit, onCancel }: TopInputProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   // Initialize the local state of the component.
   const [state, setState] = useState(value);
@@ -30,20 +31,11 @@ export default function TopInput({ value, onSubmit }: TopInputProps) {
    */
   function handleSubmit() {
     onSubmit(state);
-    setState("");
-  }
-
-  /**
-   * Cancels editing content.
-   */
-  function cancel() {
-    onSubmit("");
-    setState("");
   }
 
   return (
     <Fragment>
-      <div className="top__input__overlay" onClick={cancel}>
+      <div className="top__input__overlay" onClick={onCancel}>
       </div>
       <div className="top__input">
         <input

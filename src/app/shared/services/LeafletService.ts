@@ -21,20 +21,28 @@ export default class LeafletService {
   }
 
   /**
-   * Adds a new marker on the map.
+   * Creates a new marker element.
    *
    * @param where Position of the marker.
    * @returns The created marker.
    */
-  addMarker(where: L.LatLng): L.Marker {
+  createMarker(where: L.LatLng): L.Marker {
     const icon = L.icon({
       iconUrl: 'marker.svg',
       iconSize:     [22, 30],
       iconAnchor:   [11, 30],
       popupAnchor:  [0, -20]
     });
-    const marker = L.marker(where, { icon }).addTo(this.map);
-    return marker;
+    return L.marker(where, { icon });
+  }
+
+  /**
+   * Adds a marker in the map.
+   *
+   * @param marker The marker to add in the map.
+   */
+  addMarker(marker: L.Marker) {
+    marker.addTo(this.map);
   }
 
   /**

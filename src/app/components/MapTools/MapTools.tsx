@@ -16,8 +16,10 @@ export default function MapTools({ currentTool, onSetTool }: MapToolsProps) {
         .set("KeyP", ToolsEnum.Path)
         .set("Semicolon", ToolsEnum.Marker)
         .set("KeyE", ToolsEnum.Editor)
-        .set("KeyR", ToolsEnum.Bin);
-      const tool = toolsMap.get(event.code);
+        .set("KeyR", ToolsEnum.Bin)
+        .set("Ctrl-KeyW", ToolsEnum.Undo)
+        .set("Ctrl-KeyY", ToolsEnum.Redo);
+      const tool = toolsMap.get(`${event.ctrlKey ? "Ctrl-" : ""}${event.code}`);
       if (tool) {
         onSetTool(tool);
       }
@@ -28,16 +30,22 @@ export default function MapTools({ currentTool, onSetTool }: MapToolsProps) {
 
   return (
     <div className="map__tools">
-      {TOOLS.map(t => {
+      {TOOLS.map((tools, i) => {
         return (
-          <button
-            key={t.tool}
-            onClick={() => onSetTool(t.tool)}
-            className={`map__tool ${currentTool === t.tool ? 'map__tool--selected' : ''}`}
-            title={t.title}>
-            <i className={`fas ${t.icon}`}></i>
-          </button>
-        );
+          <div key={i} className="map__tools__set">
+            {tools.map(t => {
+              return (
+                <button
+                  key={t.tool}
+                  onClick={() => onSetTool(t.tool)}
+                  className={`map__tool ${currentTool === t.tool ? 'map__tool--selected' : ''}`}
+                  title={t.title}>
+                  <i className={`fas ${t.icon}`}></i>
+                </button>
+              );
+            })}
+          </div>
+        )
       })}
     </div>
   );
