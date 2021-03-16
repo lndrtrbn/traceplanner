@@ -1,5 +1,4 @@
-import { Marker } from "leaflet";
-import LeafletService from "../services/LeafletService";
+import { Map, Marker } from "leaflet";
 import Command from "./Command";
 
 export default class EditMarkerCommand extends Command {
@@ -8,12 +7,12 @@ export default class EditMarkerCommand extends Command {
   initialContent: string;
 
   /**
-   * @param leaflet To execute the command.
+   * @param map Map concerned by the command.
    * @param marker The marker to edit.
    * @param content The content to set to marker.
    */
-  constructor(leaflet: LeafletService, marker: Marker, content: string) {
-    super(leaflet);
+  constructor(map: Map, marker: Marker, content: string) {
+    super(map);
     this.marker = marker;
     this.content = content;
     this.initialContent = this.marker.getPopup()?.getContent()?.toString() || "";
@@ -23,13 +22,13 @@ export default class EditMarkerCommand extends Command {
    * Edit the content of the marker.
    */
   execute() {
-    this.leaflet.editMarker(this.marker, this.content);
+    this.content ? this.marker.bindPopup(this.content) : this.marker.unbindPopup();
   }
 
   /**
    * Reset content of the marker with previous value.
    */
   unExecute() {
-    this.leaflet.editMarker(this.marker, this.initialContent);
+    this.initialContent ? this.marker.bindPopup(this.initialContent) : this.marker.unbindPopup();
   }
 }

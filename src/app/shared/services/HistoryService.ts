@@ -8,16 +8,23 @@ export default class HistoryService {
   historyIndex = -1;
   
   /**
-   * Adds and executes a command.
+   * Adds a new command into the history.
+   * 
+   * The execution is optionnal because some commands are inserted
+   * after being realized by Geoman and caught by an event like
+   * the creation of markers.
    *
    * @param command The command to execute and add in the history.
+   * @param execute True if the command should be executed, false otherwise.
    */
-  insertCommand(command: Command) {
+  insert(command: Command, execute = false) {
     // Remove the commands that comes after current index when inserting new command.
     if (this.historyIndex < this.history.length - 1) {
       this.history.splice(this.historyIndex + 1);
     }
-    command.execute();
+    if (execute) {
+      command.execute();
+    }
     this.history.push(command);
     this.historyIndex++;
   }
@@ -32,7 +39,7 @@ export default class HistoryService {
   }
 
   /**
-   * Redo the last command that was undo.
+   * Redo the last command that was undid.
    */
   redo() {
     if (this.historyIndex < this.history.length - 1) {

@@ -1,29 +1,30 @@
-import LeafletService from "../services/LeafletService";
+import { Layer, Map } from "leaflet";
 import Command from "./Command";
 
-export default class RemoveCommand<T extends L.Layer> extends Command {
+export default class RemoveCommand<T extends Layer> extends Command {
   element: T;
 
   /**
-   * @param leaflet To execute the command.
+   * @param map Map concerned by the command.
    * @param element The element to remove from the map.
    */
-  constructor(leaflet: LeafletService, element: T) {
-    super(leaflet);
+  constructor(map: Map, element: T) {
+    super(map);
     this.element = element;
   }
-
+  
   /**
    * Remove the element from the map.
    */
   execute() {
-    this.leaflet.removeElement(this.element);
+    this.map.removeLayer(this.element);
   }
-
+  
   /**
    * Replace the element on the map.
    */
   unExecute() {
-    this.element.addTo(this.leaflet.map);
+    console.log(this.element);
+    this.element.addTo(this.map);
   }
 }

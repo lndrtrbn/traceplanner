@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { TOOLS, ToolsEnum } from "../../shared/tools";
+import { TOOLS, ToolsEnum } from "../../shared/Tools";
 import "./MapTools.scss";
 
 interface MapToolsProps {

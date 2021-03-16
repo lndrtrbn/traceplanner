@@ -1,16 +1,16 @@
-import LeafletService from "../services/LeafletService";
+import { Map } from "leaflet";
 
 /**
  * Abstract class to implement actions on the map.
  */
 export default abstract class Command {
-  leaflet: LeafletService;
+  map: Map;
 
   /**
-   * @param leaflet Leaflet service containing the map.
+   * @param map The map concerned by the command.
    */
-  constructor(leaflet: LeafletService) {
-    this.leaflet = leaflet;
+  constructor(map: Map) {
+    this.map = map;
   }
 
   /**

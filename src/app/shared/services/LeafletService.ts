@@ -1,4 +1,9 @@
 import * as L from "leaflet";
+import AddMarkerCommand from "../commands/AddMarkerCommand";
+import EditMarkerCommand from "../commands/EditMarkerCommand";
+import RemoveCommand from "../commands/RemoveCommand";
+import { GeomanCreateEvent, GeomanDrawstartEvent, GeomanRemoveEvent } from "../Geoman";
+import HistoryService from "./HistoryService";
 
 const MAP_CONFIG = {
   center: [47.0833, 2.4] as L.LatLngExpression, // Bourges (center of France)
@@ -7,7 +12,23 @@ const MAP_CONFIG = {
   attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | TracePlanner by <a href="https://github.com/lndrtrbn">Landry Trebon</a>'
 }
 
+const GEOMAN_CONFIG = {
+  tooltips: false,
+  cursorMarker: false,
+  markerEditable: false,
+  continueDrawing: false,
+  markerStyle: {
+    icon: L.icon({
+      iconUrl: 'marker.svg',
+      iconSize:     [22, 30],
+      iconAnchor:   [11, 30],
+      popupAnchor:  [0, -20]
+    })
+  }
+}
+
 export default class LeafletService {
+  actionsHistory: HistoryService;
   map: L.Map;
 
   /**
@@ -16,63 +37,39 @@ export default class LeafletService {
    * @param domID The ID of the DOM element to attach the leaflet map.
    */
   constructor(domID: string) {
+    this.actionsHistory = new HistoryService();
     this.map = L.map(domID).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
-    this.map.pm.addControls({  
-      position: 'topright',  
-      drawCircle: false,  
-    }); 
     L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(this.map);
+    // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
+    this.map.pm.setGlobalOptions(GEOMAN_CONFIG);
   }
 
-  /**
-   * Creates a new marker element.
-   *
-   * @param where Position of the marker.
-   * @returns The created marker.
-   */
-  createMarker(where: L.LatLng): L.Marker {
-    const icon = L.icon({
-      iconUrl: 'marker.svg',
-      iconSize:     [22, 30],
-      iconAnchor:   [11, 30],
-      popupAnchor:  [0, -20]
+  spyGeomanEvents(markerAddedCallback: (m: L.Marker) => void) {
+    // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
+    this.map.on("pm:create", (e: GeomanCreateEvent) => {
+      // On marker creation.
+      if (e.marker) {
+        const addMarker = new AddMarkerCommand(this.map, e.marker);
+        this.actionsHistory.insert(addMarker);
+        markerAddedCallback(addMarker.marker);
+      }
     });
-    return L.marker(where, { icon });
+    // On element remove.
+    // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
+    this.map.on("pm:remove", (e: GeomanRemoveEvent) => {
+      const removeElement = new RemoveCommand(this.map, e.layer);
+      this.actionsHistory.insert(removeElement);
+    });
+    // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
+    this.map.on("pm:drawstart", ({ workingLayer }: GeomanDrawstartEvent) => {
+      workingLayer.on("pm:vertexadded", (e: any) => {
+        console.log("vertexadded", e);
+      });
+    });
   }
 
-  createPolyline(where: L.LatLng): L.Polyline {
-    return L.polyline([where]);
-  }
-
-  addPointToPolyline(polyline: L.Polyline, where: L.LatLng) {
-    polyline.addLatLng(where);
-  }
-  
-  /**
-   * Sets the content of a marker.
-   *
-   * @param marker The marker to edit.
-   * @param content The content to set.
-   */
-  editMarker(marker: L.Marker, content: string) {
-    content ? marker.bindPopup(content) : marker.unbindPopup();
-  }
-
-  /**
-   * Adds an element in the map.
-   *
-   * @param element The element to add in the map.
-   */
-  addElement<T extends L.Layer>(element: T) {
-    element.addTo(this.map);
-  }
-
-  /**
-   * Removes an element from the map.
-   *
-   * @param element The element to remove.
-   */
-  removeElement<T extends L.Layer>(element: T): void {
-    this.map.removeLayer(element);
+  editMarkerContent(marker: L.Marker, content: string) {
+    const editMarker = new EditMarkerCommand(this.map, marker, content);
+    this.actionsHistory.insert(editMarker, true);
   }
 }
