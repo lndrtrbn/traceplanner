@@ -20,7 +20,7 @@ export default class AddMarkerCommand extends Command {
    * Add a new marker in the map.
    */
   execute() {
-    this.leaflet.addMarker(this.marker);
+    this.leaflet.addElement(this.marker);
   }
 
   /**

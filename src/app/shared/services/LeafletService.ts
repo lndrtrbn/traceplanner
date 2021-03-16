@@ -17,6 +17,10 @@ export default class LeafletService {
    */
   constructor(domID: string) {
     this.map = L.map(domID).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+    this.map.pm.addControls({  
+      position: 'topright',  
+      drawCircle: false,  
+    }); 
     L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(this.map);
   }
 
@@ -36,15 +40,14 @@ export default class LeafletService {
     return L.marker(where, { icon });
   }
 
-  /**
-   * Adds a marker in the map.
-   *
-   * @param marker The marker to add in the map.
-   */
-  addMarker(marker: L.Marker) {
-    marker.addTo(this.map);
+  createPolyline(where: L.LatLng): L.Polyline {
+    return L.polyline([where]);
   }
 
+  addPointToPolyline(polyline: L.Polyline, where: L.LatLng) {
+    polyline.addLatLng(where);
+  }
+  
   /**
    * Sets the content of a marker.
    *
@@ -53,6 +56,15 @@ export default class LeafletService {
    */
   editMarker(marker: L.Marker, content: string) {
     content ? marker.bindPopup(content) : marker.unbindPopup();
+  }
+
+  /**
+   * Adds an element in the map.
+   *
+   * @param element The element to add in the map.
+   */
+  addElement<T extends L.Layer>(element: T) {
+    element.addTo(this.map);
   }
 
   /**
