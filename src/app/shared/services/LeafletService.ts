@@ -3,6 +3,7 @@ import AddMarkerCommand from "../commands/AddMarkerCommand";
 import AddVertexCommand from "../commands/AddVertexCommand";
 import EditMarkerCommand from "../commands/EditMarkerCommand";
 import RemoveCommand from "../commands/RemoveCommand";
+import RemoveVertexCommand from "../commands/RemoveVertexCommand";
 import { EditableEvent, VertexEvent, Feature } from "../LeafletEditable";
 import { ToolsEnum } from "../Tools";
 import HistoryService from "./HistoryService";
@@ -93,11 +94,19 @@ export default class LeafletService {
       }
     });
 
-    // this.map.on("editable:vertex:click", (e) => {
-    //   console.log(e);
-    //   // @ts-ignore
-    //   e.cancel();
-    // });
+    // @ts-ignore
+    this.map.on("editable:vertex:ctrlclick", (e: VertexEvent) => {
+      if (e.vertex.latlngs) {
+        const vertexes: L.LatLng[] = e.vertex.latlngs;
+        const firstVertex = vertexes[0];
+        const lastVertex = vertexes[vertexes.length - 1];
+        // Removing first and last vertexes is a non sense, not usefull.
+        if (e.latlng !== firstVertex && e.latlng !== lastVertex) {
+          const removeVertex = new RemoveVertexCommand(this.map, e.layer, e.latlng);
+          this.actionsHistory.insert(removeVertex, true);
+        }
+      }
+    });
   }
   
   setTool(tool: ToolsEnum) {
