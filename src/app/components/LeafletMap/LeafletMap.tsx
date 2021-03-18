@@ -27,27 +27,30 @@ export default class LeafletMap extends Component<{}, LeafletMapState> {
     this.handleSetTool = this.handleSetTool.bind(this);
     this.setMarkerContent = this.setMarkerContent.bind(this);
     this.stopWriting = this.stopWriting.bind(this);
-    this.onMarkerAdded = this.onMarkerAdded.bind(this);
+    this.markerAdded = this.markerAdded.bind(this);
   }
 
   componentDidMount() {
-    this.leaflet = new LeafletService("leaflet__map");
-    this.leaflet.spyGeomanEvents(this.onMarkerAdded);
+    this.leaflet = new LeafletService("leaflet__map", {
+      onMarkerAdded: this.markerAdded
+    });
+    // this.leaflet.spyGeomanEvents(this.onMarkerAdded);
   }
 
-  onMarkerAdded(marker: Marker) {
-    this.setState({ writing: true });
+  markerAdded(marker: Marker) {
+    this.setState({ writing: true, tool: ToolsEnum.Movement });
+    this.leaflet?.setTool(this.state.tool);
     this.activeMarker = marker;
     // Spy click on markers to open input content.
-    marker.on("click", () => {
-      if (this.state.tool === ToolsEnum.Editor) {
-        this.activeMarker = marker;
-        this.setState({
-          writing: true,
-          inputContent: marker.getPopup()?.getContent()?.toString() || ""
-        });
-      }
-    });
+    // marker.on("click", () => {
+    //   if (this.state.tool === ToolsEnum.Editor) {
+    //     this.activeMarker = marker;
+    //     this.setState({
+    //       writing: true,
+    //       inputContent: marker.getPopup()?.getContent()?.toString() || ""
+    //     });
+    //   }
+    // });
   }
 
   setMarkerContent(content: string) {
@@ -69,19 +72,8 @@ export default class LeafletMap extends Component<{}, LeafletMapState> {
       } else if (tool === ToolsEnum.Undo) {
         this.leaflet?.actionsHistory.undo();
       } else {
-        // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
-        this.leaflet?.map.pm.disableDraw();
         this.setState({ tool });
-        if (tool === ToolsEnum.Marker) {
-          this.leaflet?.map.pm.enableDraw("Marker");
-        } else if (tool === ToolsEnum.Bin) {
-          // @ts-ignore (because geoman typedef is incomplete and does not recognize it)
-          this.leaflet?.map.pm.enableGlobalRemovalMode();
-        } else if (tool === ToolsEnum.Editor) {
-          this.leaflet?.map.pm.enableGlobalEditMode({
-            preventMarkerRemoval: true
-          });
-        }
+        this.leaflet?.setTool(tool);
       }
     }
   }

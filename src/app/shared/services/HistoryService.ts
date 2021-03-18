@@ -6,6 +6,7 @@ import Command from "../commands/Command";
 export default class HistoryService {
   history = new Array<Command>();
   historyIndex = -1;
+  lastRedoCommand?: Command;
   
   /**
    * Adds a new command into the history.
@@ -27,6 +28,7 @@ export default class HistoryService {
     }
     this.history.push(command);
     this.historyIndex++;
+    this.lastRedoCommand = undefined;
   }
 
   /**
@@ -43,7 +45,12 @@ export default class HistoryService {
    */
   redo() {
     if (this.historyIndex < this.history.length - 1) {
-      this.history[++this.historyIndex].execute();
+      this.lastRedoCommand = this.history[++this.historyIndex];
+      this.history[this.historyIndex].execute();
     }
+  }
+
+  lastRedoIs(command: any) {
+    return this.lastRedoCommand instanceof command;
   }
 }

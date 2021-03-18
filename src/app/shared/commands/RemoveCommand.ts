@@ -24,7 +24,6 @@ export default class RemoveCommand<T extends Layer> extends Command {
    * Replace the element on the map.
    */
   unExecute() {
-    console.log(this.element);
     this.element.addTo(this.map);
   }
 }
