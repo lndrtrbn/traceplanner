@@ -1,42 +1,42 @@
-import Command from "../commands/Command";
-
 /**
  * Service to manage history of actions on the map.
  */
 export default class HistoryService {
-  history = new Array<Command>();
+  readonly LOCAL_STORAGE_KEY = "TRACEPLANNER_STATE";
+
+  history = new Array<string>();
   historyIndex = -1;
-  lastRedoCommand?: Command;
+
+  constructor(initialState: string, public onStateChange: (state: string) => void) {
+    const localState = localStorage.getItem(this.LOCAL_STORAGE_KEY);
+    if (localState) {
+      initialState = localState;
+      onStateChange(initialState);
+    }
+    this.insert(initialState); // Initial state of the map.
+  }
   
   /**
-   * Adds a new command into the history.
-   * 
-   * The execution is optionnal because some commands are inserted
-   * after being realized by Geoman and caught by an event like
-   * the creation of markers.
-   *
-   * @param command The command to execute and add in the history.
-   * @param execute True if the command should be executed, false otherwise.
+   * Adds the current map state into the history.
    */
-  insert(command: Command, execute = false) {
-    // Remove the commands that comes after current index when inserting new command.
+  insert(state: string) {
+    // Remove the states that come after current index when inserting new state.
     if (this.historyIndex < this.history.length - 1) {
       this.history.splice(this.historyIndex + 1);
-    }
-    if (execute) {
-      command.execute();
-    }
-    this.history.push(command);
+    };
+    localStorage.setItem(this.LOCAL_STORAGE_KEY, state);
+    this.history.push(state);
     this.historyIndex++;
-    this.lastRedoCommand = undefined;
   }
 
   /**
    * Undo the command pointed by the index.
    */
   undo() {
-    if (this.historyIndex > -1) {
-      this.history[this.historyIndex--].unExecute();
+    if (this.historyIndex > 0) {
+      const state = this.history[--this.historyIndex];
+      localStorage.setItem(this.LOCAL_STORAGE_KEY, state);
+      this.onStateChange(state);
     }
   }
 
@@ -45,12 +45,9 @@ export default class HistoryService {
    */
   redo() {
     if (this.historyIndex < this.history.length - 1) {
-      this.lastRedoCommand = this.history[++this.historyIndex];
-      this.history[this.historyIndex].execute();
+      const state = this.history[++this.historyIndex];
+      localStorage.setItem(this.LOCAL_STORAGE_KEY, state);
+      this.onStateChange(state);
     }
-  }
-
-  lastRedoIs(command: any) {
-    return this.lastRedoCommand instanceof command;
   }
 }

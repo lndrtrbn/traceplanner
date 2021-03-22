@@ -1,9 +1,4 @@
 import * as L from "leaflet";
-import AddMarkerCommand from "../commands/AddMarkerCommand";
-import AddVertexCommand from "../commands/AddVertexCommand";
-import EditMarkerCommand from "../commands/EditMarkerCommand";
-import RemoveCommand from "../commands/RemoveCommand";
-import RemoveVertexCommand from "../commands/RemoveVertexCommand";
 import { MAP_CONFIG, MARKER_CONFIG } from "../config";
 import { EditableEvent, VertexEvent, Feature } from "../LeafletEditable";
 import { ToolsEnum } from "../Tools";
@@ -34,12 +29,17 @@ export default class LeafletService {
     return this.currentTool === ToolsEnum.Path;
   }
 
+  get featuresLayer(): L.LayerGroup {
+    // @ts-ignore
+    return this.map.editTools.featuresLayer;
+  }
+
   /**
    * @returns An array containing all features drawn.
    */
   get features(): Feature[] {
     // @ts-ignore
-    return Object.values(this.map.editTools.featuresLayer._layers);
+    return Object.values(this.featuresLayer._layers);
   }
 
   /**
@@ -50,36 +50,42 @@ export default class LeafletService {
    */
   constructor(domID: string, callbacks: LeafletCallback) {
     // Init stuff
-    this.actionsHistory = new HistoryService();
     this.currentTool = ToolsEnum.Movement;
     this.map = L.map(domID, { editable: true }).setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
     L.tileLayer(MAP_CONFIG.layerUrl, { attribution: MAP_CONFIG.attribution }).addTo(this.map);
+    this.actionsHistory = new HistoryService(this.getMapState(), (s) => this.setMapState(s));
     // -----
 
     this.map.on("editable:drawing:commit", (e: EditableEvent) => {
       if (this.isMarker) {
         const marker: L.Marker = e.layer as L.Marker;
-        const addMarker = new AddMarkerCommand(this.map, marker);
-        this.actionsHistory.insert(addMarker);
-        callbacks.onMarkerAdded(addMarker.marker);
-        addMarker.marker.disableEdit();
+        // To use GeoJSON features.
+        marker.feature = { 
+          type: "Feature",
+          geometry: {
+            type: "Point",
+            coordinates: []
+          },
+          properties: {}
+        };
+        this.actionsHistory.insert(this.getMapState());
+        callbacks.onMarkerAdded(marker);
       }
       e.layer.disableEdit();
       callbacks.onStopEdit();
+      // Spy elements removal.
       e.layer.on("click", (x: L.LeafletMouseEvent) => {
-        if (this.currentTool === ToolsEnum.Bin) {
-          const removeElement = new RemoveCommand(this.map, x.target);
-          this.actionsHistory.insert(removeElement, true);
-        }
-      })
+        this.removeElement(x.target);
+      });
     });
     
     // @ts-ignore
-    this.map.on("editable:vertex:new", (e: VertexEvent) => {
-      if (this.isPath && !(this.actionsHistory.lastRedoIs(AddVertexCommand))) {
-        const addVertex = new AddVertexCommand(this.map, e.layer, e.latlng);
-        this.actionsHistory.insert(addVertex);
-      }
+    this.map.on("editable:vertex:new", () => {
+      this.actionsHistory.insert(this.getMapState());
+    });
+    // @ts-ignore
+    this.map.on("editable:vertex:dragend", () => {
+      this.actionsHistory.insert(this.getMapState());
     });
 
     // @ts-ignore
@@ -90,8 +96,8 @@ export default class LeafletService {
         const lastVertex = vertexes[vertexes.length - 1];
         // Removing first and last vertexes is a non sense, not usefull.
         if (e.latlng !== firstVertex && e.latlng !== lastVertex) {
-          const removeVertex = new RemoveVertexCommand(this.map, e.layer, e.latlng);
-          this.actionsHistory.insert(removeVertex, true);
+          // const removeVertex = new RemoveVertexCommand(this.map, e.layer, e.latlng);
+          // this.actionsHistory.insert(removeVertex, true);
         }
       }
     });
@@ -101,7 +107,7 @@ export default class LeafletService {
     if (tool !== this.currentTool) {
       this.currentTool = tool;
       // Stop other active tools.
-      this.map.editTools.commitDrawing();
+      this.map.editTools.stopDrawing();
       this.features.forEach(f => f.disableEdit());
 
       if (tool === ToolsEnum.Path) {
@@ -121,8 +127,59 @@ export default class LeafletService {
     }
   }
 
+  /**
+   * Removes an element from the map.
+   *
+   * @param element The element to remove.
+   */
+  removeElement(element: L.Layer) {
+    if (this.currentTool === ToolsEnum.Bin) {
+      this.featuresLayer.removeLayer(element);
+      this.actionsHistory.insert(this.getMapState());
+    }
+  }
+
+  /**
+   * Binds a popup to a marker with given content.
+   * 
+   * @param marker The marker to edit.
+   * @param content The content to set to the marker.
+   */
   editMarkerContent(marker: L.Marker, content: string) {
-    const editMarker = new EditMarkerCommand(this.map, marker, content);
-    this.actionsHistory.insert(editMarker, true);
+    if (content) {
+      marker.bindPopup(content);
+      if (marker.feature) {
+        marker.feature.properties.description = content;
+      }
+      this.actionsHistory.insert(this.getMapState());
+    } else if (marker.getPopup()) {
+      marker.unbindPopup();
+      this.actionsHistory.insert(this.getMapState());
+    }
+  }
+
+  /**
+   * Gets state of the map in GeoJSON format as string.
+   *
+   * @returns The state of the map as a string.
+   */
+  private getMapState(): string {
+    return JSON.stringify(toGeoJSON(this.featuresLayer));
+  }
+
+  /**
+   * Reset the map to a specific state (GeoJSON format).
+   *
+   * @param state The state to use to reset the map.
+   */
+   private setMapState(state: string) {
+    // @ts-ignore
+    const layers: Layer[] = Object.values(fromGeoJSON(JSON.parse(state))._layers);
+    this.featuresLayer.clearLayers();
+    layers.forEach(l => {
+      l.addTo(this.featuresLayer);
+      // Spy elements removal.
+      l.on("click", (x: L.LeafletMouseEvent) => this.removeElement(x.target))
+    });
   }
 }
