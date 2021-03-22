@@ -19,11 +19,13 @@ export default class RemoveVertexCommand extends Command {
   }
 
   execute() {
+    this.path.enableEdit();
     // @ts-ignore
     this.path.editor.removeLatLng(this.where);
   }
 
   unExecute() {
+    this.path.enableEdit();
     // @ts-ignore
     this.path.editor.deleteShapeAt(this.vertexes[0]);
     // @ts-ignore

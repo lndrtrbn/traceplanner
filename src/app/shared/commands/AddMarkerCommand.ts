@@ -11,6 +11,14 @@ export default class AddMarkerCommand extends Command {
   constructor(map: Map, marker: L.Marker) {
     super(map);
     this.marker = marker;
+    this.marker.feature = {
+      type: "Feature",
+      geometry: {
+        type: "Point",
+        coordinates: []
+      },
+      properties: {}
+    }
   }
 
   /**

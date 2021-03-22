@@ -4,28 +4,15 @@ import AddVertexCommand from "../commands/AddVertexCommand";
 import EditMarkerCommand from "../commands/EditMarkerCommand";
 import RemoveCommand from "../commands/RemoveCommand";
 import RemoveVertexCommand from "../commands/RemoveVertexCommand";
+import { MAP_CONFIG, MARKER_CONFIG } from "../config";
 import { EditableEvent, VertexEvent, Feature } from "../LeafletEditable";
 import { ToolsEnum } from "../Tools";
+import { fromGeoJSON, toGeoJSON } from "./GeojsonService";
 import HistoryService from "./HistoryService";
 
-const MAP_CONFIG = {
-  center: [47.0833, 2.4] as L.LatLngExpression, // Bourges (center of France)
-  zoom: 6,
-  layerUrl: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | TracePlanner by <a href="https://github.com/lndrtrbn">Landry Trebon</a>'
-}
-
-const MARKER_CONFIG = {
-  icon: L.icon({
-    iconUrl: 'marker.svg',
-    iconSize:     [22, 30],
-    iconAnchor:   [11, 30],
-    popupAnchor:  [0, -20]
-  })
-}
-
 interface LeafletCallback {
-  onMarkerAdded: (marker: L.Marker) => void
+  onMarkerAdded: (marker: L.Marker) => void,
+  onStopEdit: () => void
 }
 
 export default class LeafletService {
@@ -78,6 +65,7 @@ export default class LeafletService {
         addMarker.marker.disableEdit();
       }
       e.layer.disableEdit();
+      callbacks.onStopEdit();
       e.layer.on("click", (x: L.LeafletMouseEvent) => {
         if (this.currentTool === ToolsEnum.Bin) {
           const removeElement = new RemoveCommand(this.map, x.target);
@@ -122,30 +110,16 @@ export default class LeafletService {
         this.map.editTools.startMarker(undefined, MARKER_CONFIG);
       } else if (tool === ToolsEnum.Editor) {
         this.features.forEach(f => f.enableEdit())
+      } else if (tool === ToolsEnum.ExportGeoJson) {
+        // @ts-ignore
+        const geojson = toGeoJSON(this.map.editTools.featuresLayer);
+        // @ts-ignore
+        this.map.editTools.featuresLayer.clearLayers();
+        // @ts-ignore
+        Object.values(fromGeoJSON(geojson)._layers).forEach(l => l.addTo(this.map.editTools.featuresLayer));
       }
     }
   }
-
-  // spyGeomanEvents(markerAddedCallback: (m: L.Marker) => void) {
-  //   this.map.on("pm:create", (e: GeomanCreateEvent) => {
-  //     // On marker creation.
-  //     if (e.marker) {
-  //       const addMarker = new AddMarkerCommand(this.map, e.marker);
-  //       this.actionsHistory.insert(addMarker);
-  //       markerAddedCallback(addMarker.marker);
-  //     }
-  //   });
-  //   // On element remove.
-  //   this.map.on("pm:remove", (e: GeomanRemoveEvent) => {
-  //     const removeElement = new RemoveCommand(this.map, e.layer);
-  //     this.actionsHistory.insert(removeElement);
-  //   });
-  //   this.map.on("pm:drawstart", ({ workingLayer }: GeomanDrawstartEvent) => {
-  //     workingLayer.on("pm:vertexadded", (e: any) => {
-  //       console.log("vertexadded", e);
-  //     });
-  //   });
-  // }
 
   editMarkerContent(marker: L.Marker, content: string) {
     const editMarker = new EditMarkerCommand(this.map, marker, content);

@@ -33,6 +33,7 @@ export default class AddVertexCommand extends Command {
    * Remove the marker added.
    */
   unExecute() {
+    this.path.enableEdit();
     // @ts-ignore
     if (!this.path.editor.drawing()) {
       // @ts-ignore

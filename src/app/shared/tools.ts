@@ -5,7 +5,8 @@ export enum ToolsEnum {
   Bin = "bin",
   Editor = "editor",
   Undo = "undo",
-  Redo = "redo"
+  Redo = "redo",
+  ExportGeoJson = "exportgeojson"
 }
 
 export interface Tool {
@@ -25,5 +26,8 @@ export const TOOLS: Tool[][] = [
   [
     { tool: ToolsEnum.Undo, title: "Undo last action [Ctrl-Z]", icon: "fa-undo" },
     { tool: ToolsEnum.Redo, title: "Redo last action [Ctrl-Y]", icon: "fa-redo" },
+  ],
+  [
+    { tool: ToolsEnum.ExportGeoJson, title: "Export to GeoJSON", icon: "fa-external-link-square-alt" },
   ]
 ];

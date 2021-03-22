@@ -28,29 +28,25 @@ export default class LeafletMap extends Component<{}, LeafletMapState> {
     this.setMarkerContent = this.setMarkerContent.bind(this);
     this.stopWriting = this.stopWriting.bind(this);
     this.markerAdded = this.markerAdded.bind(this);
+    this.resetTool = this.resetTool.bind(this);
   }
 
   componentDidMount() {
     this.leaflet = new LeafletService("leaflet__map", {
-      onMarkerAdded: this.markerAdded
+      onMarkerAdded: this.markerAdded,
+      onStopEdit: this.resetTool
     });
-    // this.leaflet.spyGeomanEvents(this.onMarkerAdded);
+  }
+
+  resetTool() {
+    this.setState({ tool: ToolsEnum.Movement });
+    this.leaflet?.setTool(this.state.tool);
   }
 
   markerAdded(marker: Marker) {
     this.setState({ writing: true, tool: ToolsEnum.Movement });
     this.leaflet?.setTool(this.state.tool);
     this.activeMarker = marker;
-    // Spy click on markers to open input content.
-    // marker.on("click", () => {
-    //   if (this.state.tool === ToolsEnum.Editor) {
-    //     this.activeMarker = marker;
-    //     this.setState({
-    //       writing: true,
-    //       inputContent: marker.getPopup()?.getContent()?.toString() || ""
-    //     });
-    //   }
-    // });
   }
 
   setMarkerContent(content: string) {
